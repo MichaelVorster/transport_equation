@@ -1,0 +1,57 @@
+&input
+  geometry = 'spherical'
+  dimensions = 1
+
+  n_time = 6000
+  d_time = 0.03
+
+  n_x1 = 90
+  n_x2 = 1
+
+  x1_start = -0.9999999
+  x1_end = 90.
+
+  x1_inner_boundary_cond = 'reflective'
+  x1_outer_boundary_cond = 'source'
+
+  x2_start = 0.01
+  x2_end = 1.0
+
+  x2_inner_boundary_cond = 'escape'
+  x2_outer_boundary_cond = 'escape'
+
+  n_momentum = 500
+  momentum_start = 0.06
+  momentum_end = 20.0
+/
+
+! ==== Geometry
+! geometry: 'cartesian', 'spherical', 'cylindrical' [string]
+! dimenions: number of spatial dimensions (1 or 2) [integer]
+
+! ==== Time
+! n_time: number of time steps [integer]
+! d_time: time step size [real]
+
+! ==== Spatial coordinates
+! n_x1: number of grid points in first spatial dimension [integer] - NB grid is defined to have n+1 points
+! n_x2: number of grid points in first spatial dimension [integer] - NB grid is defined to have n+1 points
+
+! x1_start: start of numerical domain for first coordinate [real] - NB must be greater than 0
+! x1_end: end of numerical domain for first coordinate [real]
+
+! x2_start: start of numerical domain for second coordinate [real] - NB must be greater than 0
+! x2_end: end of numerical domain for second coordinate [real]
+
+! x1_start_boundary_cond: inner boundary condition for first coordinate [string] 
+! x1_end_boundary_cond: outer boundary condition for first coordinate [string] 
+! x2_start_boundary_cond: inner boundary condition for second coordinate [string] 
+! x2_end_boundary_cond: outer boundary condition for second coordinate [string] 
+!    free escape: 'escape'
+!    Neumann / reflective: 'reflective' (makes scheme 1st order accurate)
+!    user specified: 'source' - remember to specify the source function in the subroutine 'source_function'
+
+! ==== Momentum
+! n_momentum: number of grid points in momentum [integer] - NB grid is defined to have n+1 points
+! momentum_start: start of numerical domain for momentum [real]
+! momentum_end: end of numerical domain for momentum [real]
