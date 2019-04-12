@@ -7,7 +7,7 @@ num_solutions = 5
 energy = []
 solutions = []
 for i in range(num_solutions):
-  solutions.append([])
+    solutions.append([])
 
 input_dir = ''
 file_name = 'results.txt'
@@ -27,6 +27,6 @@ for solution in solutions:
     plt.loglog(energy, solution)
     plt.xlabel('Energy [normalised]')
     plt.ylabel('Solution [normalised]')
-plt.axis([0.01, 30, 1e-3, 1e3])
+# plt.axis([1e-4, 1e5, 1e-15, 1e2])
 plt.savefig('t_LOD')
 plt.show()

@@ -139,6 +139,25 @@ program main
   print*, 'Total time', d_time*n_time
 
 
+  call coefficients( &
+    geometry, &
+    n_x1, &
+    n_x2, &
+    n_momentum, &
+    x1, &
+    x2, &
+    momentum, &
+    coef_x1x1, &
+    coef_x1, &
+    coef_x2x2, &
+    coef_x2, &
+!    coef_mom, &
+!    coef_f &
+    coef_ad, &
+    coef_syn, &
+    dimensions &
+  )
+
   call initial_condition(n_x1, n_x2, n_momentum, x1, x2, momentum, f)
 
   call source_function( &
@@ -171,32 +190,17 @@ program main
       v_x2 = 0.
     endif
 
-  call coefficients( &
-    geometry, &
-    n_x1, &
-    n_x2, &
-    n_momentum, &
-    x1, &
-    x2, &
-    momentum, &
-    coef_x1x1, &
-    coef_x1, &
-    coef_x2x2, &
-    coef_x2, &
-!    coef_mom, &
-!    coef_f &
-    coef_ad, &
-    coef_syn, &
-    dimensions &
-  )
 
   ! ! start of numerical solution
   do time_step = 0, n_time
 !$OMP PARALLEL DEFAULT(SHARED) 
 
+print*, time_step, 'a', f(0,0,n_momentum - 10)
+print*, time_step, 'a', source(0,0,n_momentum - 10)
+
 !$OMP DO 
     ! solve along first spatial coordinate
-    do k = 1, n_momentum-1
+    do k = 0, n_momentum
       do j = 0, 0
         call crank_nicolson( &
           f(:,j,k), &
@@ -211,6 +215,9 @@ program main
       enddo
     enddo
 !$OMP END DO NOWAIT
+
+print*, time_step, 'b',  f(0,0,n_momentum - 10)
+print*, time_step, 'b',  source(0,0,n_momentum - 10)
 
 !$OMP DO 
     ! solve momentum equation analytically
@@ -229,13 +236,16 @@ program main
     enddo
 !$OMP END DO NOWAIT
 
+print*, time_step, 'c',  f(0,0,n_momentum - 10)
+print*, time_step, 'c',  source(0,0,n_momentum - 10)
+
 !$OMP END PARALLEL
   enddo ! time_step
 
   open (unit=12,file='results.txt',status='unknown',form='formatted')
     do k = 0, n_momentum
-      plot_fac = momentum(k)**2
-      write(12, *) momentum(k), plot_fac*f(10,0,k), plot_fac*f(30,0,k), plot_fac*f(50,0,k), plot_fac*f(80,0,k), plot_fac*f(n_x1,0,k)
+      plot_fac = momentum(k)**4
+      write(12, *) momentum(k), plot_fac*f(0,0,k), plot_fac*f(20,0,k), plot_fac*f(30,0,k), plot_fac*f(50,0,k), plot_fac*f(80,0,k)
     enddo
   close(unit=12) 
 
@@ -272,7 +282,7 @@ subroutine initial_condition(n_x1, n_x2, n_momentum, x1, x2, momentum, f)
   integer :: i, j, k
 
   do k = 1, n_momentum-1
-    do j = 1, n_x2-1
+    do j = 0, 0
       do i = 1, n_x1-1
         f(i,j,k) = 0.
       enddo  
@@ -317,15 +327,16 @@ subroutine source_function( &
 
   if (x1_inner_boundary_cond .eq. 'source') then
     do k = 0, n_momentum
-      do j = 0, n_x2
-        source(0,j,k) = 1.0e6*momentum(k)**(-4.)
+      do j = 0, 0
+        source(0,j,k) = 1.0e0*momentum(k)**(-4.)
+        f(0,j,k) = source(0,j,k)
       enddo
     enddo    
   endif
 
   if (x1_outer_boundary_cond .eq. 'source') then
     do k = 0, n_momentum
-      do j = 0, n_x2
+      do j = 0, 0
         source(n_x1,j,k) = LIS(momentum(k))/momentum(k)/momentum(k)
       enddo
     enddo    
@@ -436,32 +447,33 @@ subroutine coefficients( &
   real(dp), dimension(0:n_x1, 0:n_x2) :: dV_x1_dx1                              ! derivative of velocity componennt with respect to x1   
   real(dp), dimension(0:n_x1, 0:n_x2) :: dV_x2_dx2                              ! derivative of velocity component with respect to x1
 
-  real(dp) :: kappa0 = 73.0                                                     ! initial diffusion coefficient 
-  real(dp) :: V0 = 1.                                                           ! initial convection velocity
-  real(dp) :: alpha = 0.0                                                       ! parameter that controls radial velocity profile
-  real(dp) :: sync_coef = 0.
-  real(dp) :: E0 = 0.938
+  real(dp) :: kappa0 = 5.                                                  ! initial diffusion coefficient 
+  real(dp) :: V0 = 1.                                                          ! initial convection velocity
+  real(dp) :: alpha = 0.                                                       ! parameter that controls radial velocity profile
+  real(dp) :: sync_coef = 0.05*0
+  real(dp) :: E0 = 5.11e-7
   real(dp) :: beta
          
   integer :: i, j, k
 
   do k = 0, n_momentum
-    do j = 0, n_x2
+    do j = 0, 0
       do i = 0, n_x1
         
         ! x1 = radius, x2 = polar angle 
         if (geometry .eq. 'spherical') then
-          beta = momentum(k)/sqrt(momentum(k)**2 + E0**2)
-          kappa_x1x1(i,j,k) = kappa0*momentum(k)*beta
-          V_x1(i,j) = V0*(1.0-exp(-13.862*x1(i)))
-          dV_x1_dx1(i,j) = (V0-V_x1(i, j))*13.862
+          ! for heliosphere
+          !beta = momentum(k)/sqrt(momentum(k)**2 + E0**2)
+          !kappa_x1x1(i,j,k) = kappa0*momentum(k)*beta
+          !V_x1(i,j) = V0*(1.0-exp(-13.862*x1(i)))
+          !dV_x1_dx1(i,j) = (V0-V_x1(i, j))*13.862
 
-          !kappa_x1x1(i,j,k) = kappa0*momentum(k)
+          kappa_x1x1(i,j,k) = kappa0*momentum(k)
           dkappa_x1x1_dx1(i,j,k) = 0.
           kappa_x2x2(i,j,k) = 0.
           dkappa_x2x2_dx2(i,j,k) = 0.
-          !V_x1(i,j) = V0*(x1(0)/x1(i))**(alpha)
-          !dV_x1_dx1(i,j) = -alpha*V_x1(i,j)/x1(i)
+          V_x1(i,j) = V0*(x1(0)/x1(i))**(alpha)
+          dV_x1_dx1(i,j) = -alpha*V_x1(i,j)/x1(i)
           V_x2(i,j) = 0.
           dV_x2_dx2(i,j) = 0.
           B_field(i,j) = 1.0
@@ -518,7 +530,7 @@ subroutine crank_nicolson( &
   real(dp), intent(inout), dimension(0:n) :: u             ! solution of the transport equation
   integer, intent(in) :: n                                 ! number of grid points along spatial direction
   real(dp), intent(in) :: d_t, d_x                         ! time and spatial step sizes, respectively 
-  real(dp), intent(in), dimension(6) :: v_boundary         ! vector incorporating boundary conditions into Thomas algorithm
+  real(dp), intent(inout), dimension(6) :: v_boundary         ! vector incorporating boundary conditions into Thomas algorithm
   real(dp), intent(in), dimension(0:n) :: coef_xx, coef_x  ! coefficients of the second and first order partial derivatives, respectively 
   real(dp), intent(in), dimension(0:n) :: source           ! array specifying any sources, including at the boundary
 
@@ -533,11 +545,16 @@ subroutine crank_nicolson( &
   d = 0.
   c = 0.
 
+  v_boundary(1) = 1./(1.+1.0*d_x/coef_xx(1))
+  v_boundary(3) = d_x/coef_xx(1)/(1.+1.0*d_x/coef_xx(1))
+
+
   c(0) = -v_boundary(1)
   c(-1) = -v_boundary(2)
   d(0) = v_boundary(3)*source(0)
 
   u(0) = v_boundary(1)*u(1) + v_boundary(2)*u(2) + v_boundary(3)*source(0)
+  print*, source(0), u(0)
   u(n) = v_boundary(4)*u(n-1) + v_boundary(5)*u(n-2) + v_boundary(6)*source(n)
 
   do i = 1, n-1
@@ -589,6 +606,7 @@ subroutine analytic_momentum_solution( &
   real(dp), intent(in) :: coef_syn              ! coefficient of synchrotron loss rate (without momentum dependence)
 
   real(dp), dimension(0:n) :: u_known           ! the known solution at the previous time
+  real(dp) x_0, y_0                             ! variables used in the analytic calculation
   real(dp) momentum_0, u_0                      ! variables used in the analytic calculation
   integer index
 
@@ -600,18 +618,25 @@ subroutine analytic_momentum_solution( &
   u(n) = 0.
 
   do k = 1, n-1
-    momentum_0 = coef_ad*momentum(k) / &
-      ((coef_ad+coef_syn*momentum(k))*exp(-coef_ad*d_t)-coef_syn*momentum(k))
+    x_0 = coef_ad*momentum(k)
+    y_0 = (coef_ad+coef_syn*momentum(k))*exp(-coef_ad*d_t)-coef_syn*momentum(k)
+    momentum_0 = x_0 / y_0      
     index = int(log(momentum_0/momentum(0))/d_ln_momentum)
 
-    if (momentum_0 .le. 0 .or. index .ge. n) then
+    if ((momentum_0 .le. 0.) .or. (y_0 .lt. 0.) .or. (index .ge. n)) then
       u(k) = 1.0e-30
     else
       u_0 = u_known(index) + (u_known(index+1) - &
         u_known(index))*(log(momentum_0)-log(momentum(index)))/d_ln_momentum
-      u(k) = u_0*exp(4.*coef_syn*momentum(k)*d_t)
-    endif  
-  enddo  
+
+        if (u_0 .le. 0.) then
+          u(k) = 1.0e-30
+        else
+          u(k) = u_0*exp(4.*coef_syn*momentum(k)*d_t)
+        endif
+
+    endif
+  enddo
 
   return
 end subroutine analytic_momentum_solution

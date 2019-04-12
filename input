@@ -2,17 +2,17 @@
   geometry = 'spherical'
   dimensions = 1
 
-  n_time = 6000
-  d_time = 0.03
+  n_time = 100
+  d_time = 0.01
 
-  n_x1 = 90
-  n_x2 = 1
+  n_x1 = 100
+  n_x2 = 0
 
-  x1_start = -0.9999999
-  x1_end = 90.
+  x1_start = 0.01
+  x1_end = 1.
 
-  x1_inner_boundary_cond = 'reflective'
-  x1_outer_boundary_cond = 'source'
+  x1_inner_boundary_cond = 'source'
+  x1_outer_boundary_cond = 'escape'
 
   x2_start = 0.01
   x2_end = 1.0
@@ -20,9 +20,9 @@
   x2_inner_boundary_cond = 'escape'
   x2_outer_boundary_cond = 'escape'
 
-  n_momentum = 500
-  momentum_start = 0.06
-  momentum_end = 20.0
+  n_momentum = 700
+  momentum_start = 1e-4
+  momentum_end = 1e5
 /
 
 ! ==== Geometry
